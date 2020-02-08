@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/tx
+       http://www.springframework.org/schema/tx/spring-tx.xsd
+       http://www.springframework.org/schema/aop
+       http://www.springframework.org/schema/aop/spring-aop.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context.xsd">
+
+<!--配置事务管理器-->
+<bean id="dataSourceTransactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+    <property name="dataSource" ref="dataSource"></property>
+ </bean>
+<!--引入mybatis(因为需要dataSource)-->
+<import resource="spring-mybatis.xml"></import>
+
+    <!--事务通知（方法）-->
+    <!--配置事务的传播行为-->
+    <tx:advice id="transactionInterceptor" transaction-manager="dataSourceTransactionManager">
+    <tx:attributes>
+        <!--只有是inst开头的方法进行事务管理，其他的都是只读-->
+        <tx:method name="inst*" read-only="false"/>
+        <tx:method name="sava*" read-only="true"></tx:method>
+        <tx:method name="*" read-only="true"></tx:method>
+    </tx:attributes>
+    </tx:advice>
+
+    <!--配置aop，管理通知，切入点-->
+  <aop:config>
+      <aop:pointcut id="mypointcut01" expression="execution(* com.itheima.service..*.*(..))"/>
+      <!--通知关联我的切入点-->
+      <aop:advisor advice-ref="transactionInterceptor" pointcut-ref="mypointcut01"></aop:advisor>
+  </aop:config>
+
+    <!--注解方式配置事务管理-->
+    <tx:annotation-driven transaction-manager="dataSourceTransactionManager"></tx:annotation-driven>
+</beans>
